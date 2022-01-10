@@ -1,1 +1,370 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <ctype.h>
 
+FILE *fp;
+const char s[2] = ";";
+
+int scan_digits(){
+    char buffer[50];
+    int i, val, len, maxlen = 1;
+
+    while(1){
+        fgets( buffer, 50, stdin );
+        len = strlen(buffer) - 1;
+
+
+        if(len > maxlen) {
+            printf("Demasiado comprido.");
+            continue;
+        }
+
+        int digit = 1;
+
+        for(i = 0; i < len; ++i) {
+            if(!isdigit( buffer[i])) {
+                digit = 0;
+                printf( "Nao e um digito.\n");
+                break;
+            }
+        }
+        if (digit){
+            break;
+        }
+    }
+    val = atoi(buffer);
+
+    return val;
+}
+
+void read_file(){
+
+
+    while (1){
+        char nome_ficheiro[100];
+        printf("Introduza o nome do ficheiro: ");
+        fgets(nome_ficheiro, 100, stdin);
+        strtok(nome_ficheiro, "\n");
+
+        fp = fopen(nome_ficheiro, "r");
+
+        if (fp == NULL) {
+            perror("Error while opening the file. Try again.\n");
+        }
+
+        else {
+            return;
+        }
+    }
+}
+
+
+void read_table(int k ){
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    int line_count = 0;
+    ssize_t line_size;
+
+    rewind(fp);
+
+    do {
+        line_count++;
+        line_size = getline(&line_buf, &line_buf_size, fp);
+        printf("%s", line_buf);
+    } while ((line_size >= 0 && k == -1) || ( line_count < k && k != -1));
+    printf("\n");
+}
+
+
+void read_n_lines(){
+    int k;
+
+    while (1){
+        printf("Introduza o numero de linhas a visualizar: \n");
+        k = scan_digits();
+
+        if (k > 0){
+            break;
+        }
+        else {
+            printf("Valor nao é inteiro positivo\n");
+        }
+    }
+    read_table(k);
+}
+
+
+
+int ask_column() {
+    int token_count = 0;
+    char coluna[100];
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    char *token;
+    char cpy[100];
+
+
+    while (1) {
+        rewind(fp);
+        getline(&line_buf, &line_buf_size, fp);
+
+        memset(cpy, '\0', sizeof(cpy));
+        strcpy(cpy, line_buf);
+
+        token = strtok(cpy, s);
+
+        printf("Colunas disponiveis: \n");
+
+        while( token != NULL ) {
+            printf("%s\n", token );
+
+            token = strtok(NULL, s);
+        }
+
+        printf("Introduza a coluna a operar: \n");
+        fgets(coluna, 100, stdin);
+        strtok(coluna, "\n");
+
+        token = strtok(line_buf, s);
+
+        while (token != NULL) {
+            if (strcmp(token, coluna) == 0) {
+                return token_count;
+            }
+            token_count++;
+            token = strtok(NULL, s);
+        }
+        printf("%s nao foi encontrado, introduza o nome de uma  coluna valida.\n", coluna);
+    }
+}
+
+
+void sum() {
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    ssize_t line_size;
+    int column_id = ask_column();
+    char *token;
+    int count;
+    int sum = 0;
+
+    rewind(fp);
+    getline(NULL, NULL, fp);
+    while (1) {
+        line_size = getline(&line_buf, &line_buf_size, fp);
+        if (line_size < 0){
+            break;
+        }
+
+        token = strtok(line_buf, s);
+        count = 0;
+
+        while(count < column_id) {
+            token = strtok(NULL, s);
+            count++;
+        }
+        sum += atoi(token);
+    }
+    printf("Sum: %d\n", sum);
+    printf("\n");
+}
+
+void average() {
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    ssize_t line_size;
+    int column_id = ask_column();
+    char *token;
+    int count;
+    int sum = 0;
+    int line_count = 0;
+
+    rewind(fp);
+    getline(NULL, NULL, fp);
+    while (1) {
+        line_size = getline(&line_buf, &line_buf_size, fp);
+        if (line_size < 0){
+            break;
+        }
+
+        token = strtok(line_buf, s);
+        count = 0;
+
+        while(count < column_id) {
+            token = strtok(NULL, s);
+            count++;
+        }
+
+        sum += atoi(token);
+        line_count++;
+    }
+
+    float average = (sum / line_count);
+    printf("Average: %2.f\n", average);
+    printf("\n");
+}
+
+
+void std_dev() {
+    ask_column();
+
+}
+
+void min_max() {
+    ask_column();
+
+}
+
+void median() {
+    ask_column();
+
+}
+
+void first_third_quartile() {
+    ask_column();
+
+}
+
+
+void stats(){
+    int number;
+
+    while (1){
+        printf("Menu de estatisticas: \n" "Prima uma opcao a escolha: \n ");
+
+        printf("1: Soma \n ");
+        printf("2: Media \n");
+        printf("3: Desvio padrao\n");
+        printf("4: Valor minimo e valor maximo\n");
+        printf("5: Mediana\n");
+        printf("6: 1 e 3 Quartil\n");
+        printf("7: Voltar ao menu da visualizacao\n");
+
+        number = scan_digits();
+
+        switch (number) {
+            case 1:
+                sum();
+                break;
+
+            case 2:
+                average();
+                break;
+
+            case 3:
+                std_dev();
+                break;
+
+            case 4:
+                min_max();
+                break;
+
+            case 5:
+                median();
+                break;
+
+            case 6:
+                first_third_quartile();
+                break;
+
+            case 7:
+                return;
+
+            default:
+                perror("Erro: Opcao invalida");
+        };
+    }
+}
+
+
+
+void data_viz(){
+    int number;
+
+    while (1){
+        printf("Menu de visualizacao: \n" "Prima uma opcao a escolha: \n ");
+
+        printf("1: Ler tabela completa \n ");
+        printf("2: Ler k linhas \n");
+        printf("3: Calculo de estatistica\n");
+        printf("4: Voltar ao menu principal\n");
+
+        number = scan_digits();
+
+        switch (number) {
+            case 1:
+                read_table(-1);
+                break;
+
+            case 2:
+                read_n_lines();
+                break;
+
+            case 3:
+                stats();
+                break;
+
+            case 4:
+                return;
+
+            default:
+                perror("Erro: Opcao invalida");
+        };
+    }
+}
+
+void history(){
+
+
+
+}
+
+
+
+void main_menu(){
+    int number;
+
+    while (1){
+        printf("Menu principal\n" "Prima uma opcao a escolha: \n ");
+
+        printf("1: Ler ficheiro \n ");
+        printf("2: Visualização de dados e das estatísticas de sumário calculadas \n");
+        printf("3: Visualização do histórico de cálculos anteriores \n");
+        printf("4: Sair do programa \n");
+
+        number = scan_digits();
+
+
+        switch (number) {
+            case 1:
+                read_file();
+                break;
+
+            case 2:
+                data_viz();
+
+                break;
+
+            case 3:
+                history();
+
+                break;
+
+            case 4:
+                exit(0);
+
+            default:
+                perror("Erro: Opcao invalida");
+        }
+    }
+}
+
+
+int main(){
+    main_menu();
+
+    
+    return 0;
+}
